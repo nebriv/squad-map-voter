@@ -2,10 +2,8 @@
 import random
 import threading
 from collections import Counter
-from statistics import mode
 import logging
 import re
-import threading
 
 class Vote:
     config = {
@@ -56,7 +54,7 @@ class Vote:
         if self.voting_active:
             logging.error('Voting cannot be started while a vote is still ongoing.')
             return
-            
+
         self.map_candidates = self.get_map_candidates()
 
         candidates_string = ""
