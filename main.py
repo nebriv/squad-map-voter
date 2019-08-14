@@ -106,6 +106,23 @@ class MapVoter:
             else:
                 logging.debug('A vote has been detected outside of the voting period: %s', log_line)
 
+    def detect_vote_initiate(self, log_line):
+        match = re.search(r"!mapvote", log_line)
+        if match:
+            if not self.voting_active:
+                # strip whitespace in log line and separate with commas
+                # format: 0:time, 1:chat_type, 2:user_name, 3:message
+                vals = log_line.split("    ") #data separated with 4 spaces
+                sender_id = vals[2]
+                chat_type = vals[1]
+                if chat_type == 'ChatAdmin':
+                    logging.info('A map vote was manually initiated by: %s', vals[2])
+                    self.start_vote()
+                else:
+                    logging.info('An attempt was made to initiate a vote outside of AdminChat: %s', log_line)
+            else:
+                logging.info('An attempt was made to initiate a vote while one is already running: %s', log_line)
+
     def start_read_server_logs(self):
         try:
             server_log = open(self.config['MapVoter']['server_log_path'], 'r')
@@ -131,6 +148,7 @@ class MapVoter:
                 line = chat_log.readline()
                 if line != "\n" and line != "":
                     self.detect_user_vote(line)
+                    self.detect_vote_initiate(line)
         except:
             logging.error('Error loading chat log file!', exc_info=True)
         finally:
