@@ -9,6 +9,7 @@ from ServerCommands import ServerCommands
 import glob
 import os
 import datetime
+import requests
 
 class MapVoter:
 
