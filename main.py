@@ -1,4 +1,4 @@
-#from srcds.rcon import RconConnection
+import sys
 import random
 import threading
 from collections import Counter
@@ -23,7 +23,22 @@ class MapVoter:
     logging.basicConfig(level=logging.DEBUG, filename=f'./logs/mapvote-{timestamp}.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
 
     def __init__(self):
-        self.config.read('mapvote.ini')
+
+        if not len(sys.argv) == 2:
+            print('Usage: python3 main.py <path to config file>')
+            return
+
+        config_path = sys.argv[1]
+        self.config.read(f'{config_path}')
+
+        try:
+            if len(self.config['MapVoter']) <= 0:
+                print('Configuration file not loaded properly.')
+                return
+        except:
+            print('Error loading configuration file.')
+            return
+
         self.server = ServerCommands(self.config)
 
 
