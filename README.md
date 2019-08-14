@@ -10,13 +10,21 @@ A simple script to allow users to vote for the next map to be played on a Squad 
 To configure Squad Map Voter, copy the mapvote.example.ini to a file named mapvote.ini or include the following configuration options in an existing ini file.
 
 [MapVoter]
+
 bm_token=<battlemetrics authentication token>
+
 bm_server_id=<battlemetrics server ID>
+
 map_rotation_path=<path to server map rotation file>
+
 server_log_path=<path to server log file>
+
 vote_duration=<how many seconds to open voting>
+
 num_map_candidates=<how many map choices for voting (max is 9)>
+
 vote_delay=<how many seconds to wait after match start to start voting>
+
 chat_log_path=<path to your chat logs>
 
 
