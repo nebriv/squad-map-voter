@@ -9,15 +9,9 @@ from ServerCommands import ServerCommands
 import glob
 import os
 
-class Vote:
+class MapVoter:
 
     config = configparser.ConfigParser()
-    config['DEFAULT'] = {
-        "vote_duration": 1.0,
-        "num_map_candidates": 3,
-        "vote_delay": 5
-    }
-
     server = ServerCommands()
     map_candidates = {}
     votes = {}
@@ -191,4 +185,4 @@ class Vote:
         return candidates
 
 if __name__ == "__main__":
-    v = Vote()
+    v = MapVoter()
