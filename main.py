@@ -97,6 +97,10 @@ class MapVoter:
         #set next map to winning map
         self.server.set_map(winning_map[0])
 
+        # clear all previous votes and candidates
+        self.votes = {}
+        self.map_candidates = {}
+
     def detect_match_start(self, log_line):
         match = re.search(r"LogWorld: SeamlessTravel to:", log_line)
         if match:
