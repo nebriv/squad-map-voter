@@ -31,4 +31,4 @@ To configure Squad Map Voter, copy the mapvote.example.ini to a file named mapvo
 # Usage
 `python3 main.py <path to configuration file>`
 
-Squad Map Voter will automatically select `<num_map_candidates>` random maps from the supplied map rotation file and open up a vote for `<vote_duration>` seconds. Players will be able to vote in the chat using `!vote <choice>` where `<choice>` is the respective number for the map they would like to vote for. Voting will last for `<vote_duration>` seconds. When voting is complete, Squad Map Voter will broadcast the winner and set the next map.
+Squad Map Voter will automatically select `<num_map_candidates>` random maps from the supplied map rotation file and open up a vote for `<vote_duration>` seconds `<vote_delay>` seconds after a new match as started. Players will be able to vote in the chat using `!vote <choice>` where `<choice>` is the respective number for the map they would like to vote for. Voting will last for `<vote_duration>` seconds. When voting is complete, Squad Map Voter will broadcast the winner and set the next map.
