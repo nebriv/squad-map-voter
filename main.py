@@ -4,48 +4,40 @@ import threading
 from collections import Counter
 import logging
 import re
+import configparser
+from ServerCommands import ServerCommands
+import glob
+import os
 
 class Vote:
-    config = {
+
+    config = configparser.ConfigParser()
+    config['DEFAULT'] = {
         "vote_duration": 1.0,
         "num_map_candidates": 3,
         "vote_delay": 5
     }
 
+    server = ServerCommands()
     map_candidates = {}
     votes = {}
     voting_active = False
 
     def __init__(self):
+        self.config.read('mapvote.ini')
         logging.basicConfig(level=logging.DEBUG, filename='mapvote.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
         logging.info('Squad Map Voter initialized')
-        self.load_config()
-        t = threading.Thread(target=self.start_log_stream, args=())
-        t.start()
-        #self.rcon = RconConnection(self.config.get("rcon_ip"), port=int(self.config.get("rcon_port")), password=self.config.get("rcon_password"))
 
-    def load_config(self):
-        try:
-            config = open("./options.cfg", "r")
-            if config.mode == "r":
-                line = config.readline()
-                while line:
-                    if line[0] != "#":
-                        val = line.rstrip().split('=')
-                        try:
-                            self.config.update({val[0]: val[1]})
-                        except:
-                            logging.error('Error in configuration file format!')
-                    line = config.readline()
-        except:
-            logging.error('Error loading configuration file!')
-        else:
-            logging.debug('Configuration file loaded successfully')
-        finally:
-            config.close()
+        # start a separate thread for the server log listener
+        sl = threading.Thread(target=self.start_read_server_logs, args=())
+        sl.start()
+
+        # start another separate thread for the chat log listener
+        cl = threading.Thread(target=self.start_read_chat_logs, args=())
+        cl.start()
 
     def start_vote_delay(self):
-        time = float(self.config.get("vote_delay"))
+        time = self.config['MapVoter'].getfloat("vote_delay")
         vote_delay_timer = threading.Timer(time, self.start_vote)
         vote_delay_timer.start()
         logging.info('Voting will begin in %f seconds.', time)
@@ -59,43 +51,33 @@ class Vote:
 
         candidates_string = ""
         for key in self.map_candidates:
-            candidates_string += f"{key}. {self.map_candidates[key]} | "
+            candidates_string += f"{key}. {self.map_candidates[key]} \n"
 
         logging.info('Map candidates are %s', candidates_string)
 
-        # Change to admin broadcast RCON
-        msg = f"Map voting has begun! Type !vote followed by a number to vote. | {candidates_string}"
-        print(msg)
-        #self.rcon.exec_command(f'AdminBroadcast "{msg}"')
+        self.server.broadcast(f"Map voting has begun! Type !vote followed by a number to vote.\n{candidates_string}\nExample: !vote 1")
 
-        time = float(self.config.get("vote_duration"))
+        time = self.config['MapVoter'].getfloat("vote_duration")
+
+        # start vote timer
         vote_timer = threading.Timer(time, self.end_vote)
         vote_timer.start()
+
         self.voting_active = True
 
         logging.info('Voting has been started and will end in %f seconds.', time)
 
     def end_vote(self):
-        logging.info('Voting has been ended.')
         self.voting_active = False
-
-        if not self.get_winning_map():
-            logging.info('Voting has ended. No votes were cast!')
-            #self.rcon.exec_command(f'AdminBroadcast "Voting has ended. No votes were cast!"')
-            return
+        logging.info('Voting has ended.')
 
         winning_map, winning_map_votes = self.get_winning_map()
 
-        if winning_map is None:
-            logging.info('There was no winning map!')
-            return
-
-        # Change to admin broadcast RCON
-        msg = f"Voting has ended. {winning_map} has won with {winning_map_votes} votes!"
-        #self.rcon.exec_command(f'AdminBroadcast "{msg}"')
+        # broadcast winning map
+        self.server.broadcast(f"Voting has ended. {winning_map} has won with {winning_map_votes} votes!")
 
         #set next map to winning map
-        #self.rcon.exec_command(f'AdminSetNextMap "{winning_map}"')
+        self.server.set_map(winning_map)
 
     def detect_match_start(self, log_line):
         match = re.search(r"LogOnline: GotoState: NewState: Playing", log_line)
@@ -106,52 +88,67 @@ class Vote:
         match = re.search(r"!vote", log_line)
         if match:
             if self.voting_active:
-                self.parse_user_vote(log_line)
+                # strip whitespace in log line and separate with commas
+                # format: 0:time, 1:chat_type, 2:user_name, 3:message
+                vals = log_line.split("    ") #data separated with 4 spaces
+                voter_id = vals[2]
+                command_index = vals[3].find('!vote')
+                # get the char immediately after !vote
+                vote_choice = vals[3][command_index+5:command_index+7].strip()
+                # only continue if the vote value is a positive integer
+                try:
+                    self.store_vote(voter_id, int(vote_choice))
+                except:
+                    logging.info('User %s has submitted an invalid vote value (%s).', voter_id, vote_choice)
             else:
                 logging.debug('A vote has been detected outside of the voting period: %s', log_line)
 
-    def start_log_stream(self):
+    def start_read_server_logs(self):
         try:
-            server_log = open(self.config.get('server_log_path'), 'r')
+            server_log = open(self.config['MapVoter']['server_log_path'], 'r')
             server_log.seek(0, 2)
             while True:
                 line = server_log.readline()
                 if line != "\n" and line != "":
                     self.detect_match_start(line)
-                    self.detect_user_vote(line)
         except:
             logging.error('Error loading server log file!', exc_info=True)
         finally:
             server_log.close()
 
-    def parse_user_vote(self, log_line):
-        #save vote
-        #TODO: parse out vote choice and user id
-        voter_id = 123456
-        vote_choice = 2
-        if self.store_vote(voter_id, vote_choice):
-            #notifiy voting user SUCCESS via Warn
-            #self.rcon.exec_command(f'AdminWarnById "{voter_id}" Your vote has been recorded!')
+    def start_read_chat_logs(self):
+        chat_log_path = self.config['MapVoter']['chat_log_path']
+        all_log_files = glob.glob(f'{chat_log_path}/*')
+        latest_log = max(all_log_files, key=os.path.getmtime)
 
-            pass
-        else:
-            #notifiy voting user FAIL via warn
-            #self.rcon.exec_command(f'AdminWarnById "{voter_id}" Your vote has not been recorded! Please make sure there is an ongoing vote and try again.')
+        try:
+            chat_log = open(latest_log, 'r')
+            chat_log.seek(0, 2)
+            while True:
+                line = chat_log.readline()
+                if line != "\n" and line != "":
+                    self.detect_user_vote(line)
+        except:
+            logging.error('Error loading chat log file!', exc_info=True)
+        finally:
+            chat_log.close()
 
-            pass
 
     def store_vote(self, voter_id, vote_choice):
         if vote_choice not in self.map_candidates.keys():
-            logging.debug('User with ID %i has submitted an invalid vote (%i).', voter_id, vote_choice)
+            logging.info('User %s has submitted an invalid vote (%i).', voter_id, vote_choice)
             return False
         else:
             self.votes.update({voter_id:vote_choice})
-            logging.info('User with ID %i has voted for option %i', voter_id, vote_choice)
+            logging.info('User %s has voted for option %i', voter_id, vote_choice)
             return True
 
     def get_winning_map(self):
         options = []
+
         if len(self.votes) <= 0:
+            logging.info('Voting has ended. No votes were cast!')
+            self.server.broadcast(f"Voting has ended. No votes were cast!")
             return False
 
         for key in self.votes:
@@ -159,6 +156,10 @@ class Vote:
 
         votes_count = Counter(options)
         winning_value = votes_count.most_common(1)[0]
+
+        if not winning_value:
+            logging.error('Problem in calculating the winning map!', exc_info=True)
+
         winning_map_id = winning_value[0]
         winning_map_votes = winning_value[1]
         winning_map = self.map_candidates.get(winning_map_id)
@@ -167,7 +168,7 @@ class Vote:
         return [winning_map, winning_map_votes]
 
     def get_map_list(self):
-        map_list = open(self.config.get('map_rotation_path'), 'r')
+        map_list = open(self.config['MapVoter']['map_rotation_path'], 'r')
         maps = []
         try:
             if map_list.mode == "r":
@@ -185,7 +186,7 @@ class Vote:
     def get_map_candidates(self):
         map_list = self.get_map_list()
         candidates = {}
-        for i in range(int(self.config.get('num_map_candidates'))):
+        for i in range(self.config['MapVoter'].getint('num_map_candidates')):
             candidates.update({i+1:map_list[random.randint(0,len(map_list))].rstrip()})
         return candidates
 
