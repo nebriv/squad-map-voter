@@ -18,7 +18,7 @@ class MapVoter:
     voting_active = False
 
     now = datetime.datetime.now()
-    timestamp = now.strftime("%Y%m%d-%H%M")
+    timestamp = now.strftime("%Y%m%d")
 
     logging.basicConfig(level=logging.DEBUG, filename=f'./logs/mapvote-{timestamp}.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
 
