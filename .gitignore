@@ -1,3 +1,4 @@
 *.cfg
 *.log
 chat_logs
+__pycache__/
