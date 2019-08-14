@@ -80,7 +80,7 @@ class Vote:
         self.server.set_map(winning_map)
 
     def detect_match_start(self, log_line):
-        match = re.search(r"LogOnline: GotoState: NewState: Playing", log_line)
+        match = re.search(r"LogWorld: SeamlessTravel to:", log_line)
         if match:
             self.start_vote_delay()
 
