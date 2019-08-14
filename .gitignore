@@ -3,3 +3,6 @@
 mapvote.ini
 chat_logs
 __pycache__/
+build/
+dist/
+*.spec

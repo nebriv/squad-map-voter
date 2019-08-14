@@ -25,7 +25,7 @@ class MapVoter:
     def __init__(self):
 
         if not len(sys.argv) == 2:
-            print('Usage: python3 main.py <path to config file>')
+            print('Usage: SquadMapVoter <path to config file>')
             return
 
         config_path = sys.argv[1]
