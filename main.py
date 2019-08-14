@@ -8,18 +8,25 @@ import configparser
 from ServerCommands import ServerCommands
 import glob
 import os
+import datetime
 
 class MapVoter:
 
     config = configparser.ConfigParser()
-    server = ServerCommands()
     map_candidates = {}
     votes = {}
     voting_active = False
 
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y%m%d-%H%M")
+
+    logging.basicConfig(level=logging.DEBUG, filename=f'./logs/mapvote-{timestamp}.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
+
     def __init__(self):
         self.config.read('mapvote.ini')
-        logging.basicConfig(level=logging.DEBUG, filename='mapvote.log', filemode='w', format='%(asctime)s - %(levelname)s - %(message)s')
+        self.server = ServerCommands(self.config)
+
+
         logging.info('Squad Map Voter initialized')
 
         # start a separate thread for the server log listener
@@ -65,13 +72,15 @@ class MapVoter:
         self.voting_active = False
         logging.info('Voting has ended.')
 
-        winning_map, winning_map_votes = self.get_winning_map()
+        winning_map = self.get_winning_map()
+        if not winning_map:
+            return
 
         # broadcast winning map
-        self.server.broadcast(f"Voting has ended. {winning_map} has won with {winning_map_votes} votes!")
+        self.server.broadcast(f"Voting has ended. {winning_map[0]} has won with {winning_map[1]} votes!")
 
         #set next map to winning map
-        self.server.set_map(winning_map)
+        self.server.set_map(winning_map[0])
 
     def detect_match_start(self, log_line):
         match = re.search(r"LogWorld: SeamlessTravel to:", log_line)
@@ -153,6 +162,7 @@ class MapVoter:
 
         if not winning_value:
             logging.error('Problem in calculating the winning map!', exc_info=True)
+            return False
 
         winning_map_id = winning_value[0]
         winning_map_votes = winning_value[1]
