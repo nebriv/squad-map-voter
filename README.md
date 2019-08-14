@@ -1,4 +1,6 @@
 
+# This project is a work in progress and does not currently work! 
+
 # Squad Map Voter
 A simple script to allow users to vote for the next map to be played.
 
@@ -10,12 +12,19 @@ A simple script to allow users to vote for the next map to be played.
 To configure Squad Map Voter, use the options.cfg file located in the same directory as the program.
 
 `rcon_ip`: The IP address of your server.
+
 `rcon_port`: The RCON port on your server.
+
 `rcon_password`: The RCON password.
+
 `map_rotation_path`: The file path to your MapRotation.cfg file. You may also use a separate file containing a list of only the maps you want to be used for voting in the same format as MapRotation.cfg.
+
 `server_log_path`: The file path to your SquadGame.log
+
 `vote_duration`: How long (in seconds) players will have to place their votes for a map.
+
 `num_map_candidates`: The number of options users will have to choose from when voting. The recommended amount is 3.
+
 `vote_delay`: How long to wait (in seconds) after the start of a match before initiating a map vote.
 
 
