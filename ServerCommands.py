@@ -12,11 +12,12 @@ class ServerCommands:
         header = {'Authorization': self.config['MapVoter']['bm_token']}
         data = {"data":{"type":"rconCommand","attributes":{"command":"raw","options":{"raw":command}}}}
         try:
-            requests.post(f'https://api.battlemetrics.com/servers/{self.config['MapVoter']['mb_server_id']}/command', headers=header, json=data)
+            requests.post(f"https://api.battlemetrics.com/servers/{self.config['MapVoter']['mb_server_id']}/command", headers=header, json=data)
+
         except:
             time.sleep(1)
             try:
-                requests.post(f'https://api.battlemetrics.com/servers/{self.server_id}/command', headers=header, json=data)
+                requests.post(f"https://api.battlemetrics.com/servers/{self.config['MapVoter']['mb_server_id']}/command", headers=header, json=data)
             except:
                 logging.error(f'Error sending server command: {command}', exc_info=True)
 
