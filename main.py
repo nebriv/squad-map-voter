@@ -176,7 +176,7 @@ class MapVoter:
                 line = chat_log.readline()
                 if line != "\n" and line != "":
                     self.detect_user_vote(line)
-                    if self.config['MapVoter']['allow_vote_initiate']:
+                    if self.config['MapVoter'].getBoolean('allow_vote_initiate'):
                         self.detect_vote_initiate(line)
         except:
             logging.error('Error loading chat log file!', exc_info=True)
