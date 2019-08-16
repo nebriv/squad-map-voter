@@ -10,6 +10,7 @@ import glob
 import os
 import datetime
 import requests
+import time
 
 class MapVoter:
 
@@ -78,15 +79,32 @@ class MapVoter:
         logging.info('Map candidates are %s', candidates_string)
 
         self.server.broadcast(f"Map voting has begun! Type !vote followed by a number to vote.\n{candidates_string}\nExample: !vote 1")
+        # start recurring announcements
+        recurring_announcements = threading.Timer(self.config['MapVoter'].getfloat("announcement_interval"), self.send_vote_active_reminder).start()
 
         # start vote timer
-        time = self.config['MapVoter'].getfloat("vote_duration")
-        vote_timer = threading.Timer(time, self.end_vote)
+        duration = self.config['MapVoter'].getfloat("vote_duration")
+        vote_timer = threading.Timer(duration, self.end_vote)
         vote_timer.start()
+        self.vote_timer_start_time = time.time()
 
         self.voting_active = True
 
-        logging.info('Voting has been started and will end in %f seconds.', time)
+        logging.info('Voting has been started and will end in %f seconds.', duration)
+
+    def send_vote_active_reminder(self):
+        # build the candidates string for the vote announcement (again)
+        candidates_string = ""
+        for key in self.map_candidates:
+            candidates_string += f"{key}. {self.map_candidates[key]} \n"
+
+        while self.voting_active:
+            # calculate time remaining
+            elapsed_time = time.time() - self.vote_timer_start_time
+            time_remaining = round(self.config['MapVoter'].getfloat("vote_duration") - elapsed_time)
+
+            self.server.broadcast(f"Map voting is active with {time_remaining} seconds left! Type !vote followed by a number to vote.\n{candidates_string}\nExample: !vote 1")
+            time.sleep(self.config['MapVoter'].getfloat("announcement_interval"))
 
     def end_vote(self):
         self.voting_active = False
