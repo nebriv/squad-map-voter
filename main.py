@@ -18,10 +18,12 @@ class MapVoter:
     votes = {}
     voting_active = False
 
+    # logging setup
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y%m%d")
-    
     dirname = os.path.dirname(__file__)
+    if not os.path.isdir(os.path.join(dirname, 'logs')):
+        os.mkdir(os.path.join(dirname, 'logs'))
     logging.basicConfig(level=logging.DEBUG, filename=os.path.join(dirname, f'logs/mapvote-{timestamp}.log'), filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
 
     def __init__(self):
