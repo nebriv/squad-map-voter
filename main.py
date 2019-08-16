@@ -20,8 +20,9 @@ class MapVoter:
 
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y%m%d")
-
-    logging.basicConfig(level=logging.DEBUG, filename=f'./logs/mapvote-{timestamp}.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    dirname = os.path.dirname(__file__)
+    logging.basicConfig(level=logging.DEBUG, filename=os.path.join(dirname, f'logs/mapvote-{timestamp}.log'), filemode='a', format='%(asctime)s - %(levelname)s - %(message)s')
 
     def __init__(self):
 
@@ -178,7 +179,6 @@ class MapVoter:
             logging.error('Error loading chat log file!', exc_info=True)
         finally:
             chat_log.close()
-
 
     def store_vote(self, voter_id, vote_choice):
         if vote_choice not in self.map_candidates.keys():
