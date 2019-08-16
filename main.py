@@ -60,12 +60,14 @@ class MapVoter:
         logging.info('Voting will begin in %f seconds.', time)
 
     def start_vote(self):
+        # do not start a vote if one is already active
         if self.voting_active:
             logging.error('Voting cannot be started while a vote is still ongoing.')
             return
 
         self.map_candidates = self.get_map_candidates()
 
+        # build the candidates string for the vote announcement
         candidates_string = ""
         for key in self.map_candidates:
             candidates_string += f"{key}. {self.map_candidates[key]} \n"
@@ -74,9 +76,8 @@ class MapVoter:
 
         self.server.broadcast(f"Map voting has begun! Type !vote followed by a number to vote.\n{candidates_string}\nExample: !vote 1")
 
-        time = self.config['MapVoter'].getfloat("vote_duration")
-
         # start vote timer
+        time = self.config['MapVoter'].getfloat("vote_duration")
         vote_timer = threading.Timer(time, self.end_vote)
         vote_timer.start()
 
@@ -89,13 +90,15 @@ class MapVoter:
         logging.info('Voting has ended.')
 
         winning_map = self.get_winning_map()
+
+        # do nothing if there is no winning map
         if not winning_map:
             return
 
         # broadcast winning map
         self.server.broadcast(f"Voting has ended. {winning_map[0]} has won with {winning_map[1]} votes!")
 
-        #set next map to winning map
+        # set next map to winning map
         self.server.set_map(winning_map[0])
 
         # clear all previous votes and candidates
@@ -146,6 +149,7 @@ class MapVoter:
     def start_read_server_logs(self):
         try:
             server_log = open(self.config['MapVoter']['server_log_path'], 'r')
+            # start reading from the end of the file
             server_log.seek(0, 2)
             while True:
                 line = server_log.readline()
@@ -163,6 +167,7 @@ class MapVoter:
 
         try:
             chat_log = open(latest_log, 'r')
+            # start reading from the end of the file
             chat_log.seek(0, 2)
             while True:
                 line = chat_log.readline()
@@ -185,19 +190,22 @@ class MapVoter:
             return True
 
     def get_winning_map(self):
-        options = []
-
+        # catch no votes cast
         if len(self.votes) <= 0:
             logging.info('Voting has ended. No votes were cast!')
             self.server.broadcast(f"Voting has ended. No votes were cast!")
             return False
 
+        # get the most voted number
+        options = []
         for key in self.votes:
             options.append(self.votes[key])
 
         votes_count = Counter(options)
+        # winning_value = [<winning_number>, <num_occurences>]
         winning_value = votes_count.most_common(1)[0]
 
+        # silently fail if unable to determine the winning_value
         if not winning_value:
             logging.error('Problem in calculating the winning map!', exc_info=True)
             return False
@@ -228,6 +236,7 @@ class MapVoter:
     def get_map_candidates(self):
         map_list = self.get_map_list()
         candidates = {}
+        # get x random maps from the map list file
         for i in range(self.config['MapVoter'].getint('num_map_candidates')):
             candidates.update({i+1:map_list[random.randint(0,len(map_list))].rstrip()})
         return candidates
