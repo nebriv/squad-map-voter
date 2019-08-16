@@ -242,6 +242,8 @@ class MapVoter:
         # get x random maps from the map list file
         for i in range(self.config['MapVoter'].getint('num_map_candidates')):
             candidates.update({i+1:map_list[random.randint(0,len(map_list))].rstrip()})
+        # append next map option to candidates
+        candidates.update({len(candidates)+1: 'Play the next map in rotation.'})
         return candidates
 
 if __name__ == "__main__":
