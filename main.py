@@ -101,8 +101,9 @@ class MapVoter:
         # broadcast winning map
         self.server.broadcast(f"Voting has ended. {winning_map[0]} has won with {winning_map[1]} votes!")
 
-        # set next map to winning map
-        self.server.set_map(winning_map[0])
+        # set next map to winning map if not play next map option
+        if winning_map[0] != 'Play the next map in rotation':
+            self.server.set_map(winning_map[0])
 
         # clear all previous votes and candidates
         self.votes = {}
@@ -119,7 +120,7 @@ class MapVoter:
             if self.voting_active:
                 # strip whitespace in log line and separate with commas
                 # format: 0:time, 1:chat_type, 2:user_name, 3:message
-                vals = log_line.split("\t") #data separated with 4 spaces
+                vals = log_line.split("\t") #data separated with 1 tab
                 voter_id = vals[2]
                 command_index = vals[3].find('!vote')
                 # get the char immediately after !vote
@@ -138,7 +139,7 @@ class MapVoter:
             if not self.voting_active:
                 # strip whitespace in log line and separate with commas
                 # format: 0:time, 1:chat_type, 2:user_name, 3:message
-                vals = log_line.split("\t") #data separated with 4 spaces
+                vals = log_line.split("\t") #data separated with 1 tab
                 sender_id = vals[2]
                 chat_type = vals[1]
                 if chat_type == 'ChatAdmin':
@@ -176,7 +177,7 @@ class MapVoter:
                 line = chat_log.readline()
                 if line != "\n" and line != "":
                     self.detect_user_vote(line)
-                    if self.config['MapVoter'].getBoolean('allow_vote_initiate'):
+                    if self.config['MapVoter'].getboolean('allow_vote_initiate'):
                         self.detect_vote_initiate(line)
         except:
             logging.error('Error loading chat log file!', exc_info=True)
@@ -216,6 +217,7 @@ class MapVoter:
         winning_map_id = winning_value[0]
         winning_map_votes = winning_value[1]
         winning_map = self.map_candidates.get(winning_map_id)
+
         logging.info('Winning map is %s with %i / %i votes.', winning_map, winning_map_votes, len(self.votes))
 
         return [winning_map, winning_map_votes]
@@ -243,7 +245,7 @@ class MapVoter:
         for i in range(self.config['MapVoter'].getint('num_map_candidates')):
             candidates.update({i+1:map_list[random.randint(0,len(map_list))].rstrip()})
         # append next map option to candidates
-        candidates.update({len(candidates)+1: 'Play the next map in rotation.'})
+        candidates.update({len(candidates)+1: 'Play the next map in rotation'})
         return candidates
 
 if __name__ == "__main__":
