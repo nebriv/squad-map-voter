@@ -119,7 +119,7 @@ class MapVoter:
             if self.voting_active:
                 # strip whitespace in log line and separate with commas
                 # format: 0:time, 1:chat_type, 2:user_name, 3:message
-                vals = log_line.split("    ") #data separated with 4 spaces
+                vals = log_line.split("\t") #data separated with 4 spaces
                 voter_id = vals[2]
                 command_index = vals[3].find('!vote')
                 # get the char immediately after !vote
@@ -138,7 +138,7 @@ class MapVoter:
             if not self.voting_active:
                 # strip whitespace in log line and separate with commas
                 # format: 0:time, 1:chat_type, 2:user_name, 3:message
-                vals = log_line.split("    ") #data separated with 4 spaces
+                vals = log_line.split("\t") #data separated with 4 spaces
                 sender_id = vals[2]
                 chat_type = vals[1]
                 if chat_type == 'ChatAdmin':
