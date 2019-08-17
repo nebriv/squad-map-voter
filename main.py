@@ -148,12 +148,12 @@ class MapVoter:
         self.map_candidates = {}
 
     def detect_match_start(self, log_line):
-        match = re.search(r"LogWorld: SeamlessTravel to:", log_line)
+        match = re.search(r"LogWorld: SeamlessTravel to:", log_line, re.IGNORECASE)
         if match:
             self.start_vote_delay()
 
     def detect_user_vote(self, log_line):
-        match = re.search(r"!vote", log_line)
+        match = re.search(r"!vote", log_line, re.IGNORECASE)
         if match:
             if self.voting_active:
                 # strip whitespace in log line and separate with commas
@@ -172,7 +172,7 @@ class MapVoter:
                 logging.debug('A vote has been detected outside of the voting period: %s', log_line)
 
     def detect_vote_initiate(self, log_line):
-        match = re.search(r"!mapvote", log_line)
+        match = re.search(r"!mapvote", log_line, re.IGNORECASE)
         if match:
             if not self.voting_active:
                 # strip whitespace in log line and separate with commas
