@@ -129,7 +129,6 @@ class MapVoter:
 
         # do nothing if there is no winning map
         if not winning_map:
-            logging.error('Unable to determine a winning map')
             return
 
         # broadcast winning map
