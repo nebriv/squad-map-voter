@@ -93,20 +93,18 @@ class MapVoter:
         logging.info('Voting has been started and will end in %f seconds.', duration)
 
     def send_vote_active_reminder(self):
+         # build the candidates string for the vote announcement
+        candidates_string = ""
+        for key in self.map_candidates:
+            candidates_string += f"{key}. {self.map_candidates[key]} \n"
 
         while self.voting_active:
-            vote_counts = self.get_current_vote_counts()
-
-            # build the current votes string
-            vote_counts_string = ""
-            for key in vote_counts:
-                vote_counts_string += f"{key}. {vote_counts[key].get('mapname')} ({vote_counts[key].get('mapvotes')} votes) \n"
-
+            
             # calculate time remaining
             elapsed_time = time.time() - self.vote_timer_start_time
             time_remaining = round(self.config['MapVoter'].getfloat("vote_duration") - elapsed_time)
 
-            self.server.broadcast(f"Voting ends in {time_remaining} seconds! \n{vote_counts_string}\n")
+            self.server.broadcast(f"Voting has ends in {time_remaining} seconds! Type !vote followed by a number to vote.\n{candidates_string}\n")
             time.sleep(self.config['MapVoter'].getfloat("announcement_interval"))
 
     def get_current_vote_counts(self):
@@ -131,8 +129,15 @@ class MapVoter:
         if not winning_map:
             return
 
+        vote_counts = self.get_current_vote_counts()
+
+        # build the final votes string
+        vote_counts_string = ""
+        for key in vote_counts:
+            vote_counts_string += f"{key}. {vote_counts[key].get('mapname')} ({vote_counts[key].get('mapvotes')} votes) \n"
+
         # broadcast winning map
-        self.server.broadcast(f"Voting has ended. {winning_map[0]} has won with {winning_map[1]} votes!")
+        self.server.broadcast(f"Voting has ended.\n{vote_counts_string}\n{winning_map[0]} has won!")
 
         # set next map to winning map if not play next map option
         if winning_map[0] != 'Play the next map in rotation':
