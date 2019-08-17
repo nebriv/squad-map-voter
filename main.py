@@ -274,11 +274,7 @@ class MapVoter:
     def get_map_candidates(self):
         map_list = self.get_map_list()
         candidates = {}
-        i = 1
-
-        # add first random map
-        r_map = map_list[random.randint(0,len(map_list))].rstrip()
-        candidates.update({i:r_map})
+        i = 0
 
         # add remaining random maps if the layer is not already added
         while len(candidates) < self.config['MapVoter'].getint('num_map_candidates'):
@@ -288,6 +284,9 @@ class MapVoter:
             if self.layer_not_in_candidates(random_map, candidates):
                 candidates.update({i+1:random_map})
                 i += 1
+
+        # add final candidate
+        candidates.update({len(candidates)+1:'Play the next map in rotation'})
 
         return candidates
 
