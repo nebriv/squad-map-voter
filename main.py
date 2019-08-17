@@ -160,7 +160,7 @@ class MapVoter:
                 # format: 0:time, 1:chat_type, 2:user_name, 3:message
                 vals = log_line.split("\t") #data separated with 1 tab
                 voter_id = vals[2]
-                command_index = vals[3].find('!vote')
+                command_index = vals[3].lower().find('!vote')
                 # get the char immediately after !vote
                 vote_choice = vals[3][command_index+5:command_index+7].strip()
                 # only continue if the vote value is a positive integer
