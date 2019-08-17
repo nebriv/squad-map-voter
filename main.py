@@ -291,12 +291,12 @@ class MapVoter:
         return candidates
 
     def layer_not_in_candidates(self, map, candidates):
-        exists = True
+        not_in_candidates = True
         for key in candidates:
             if map[:4] == candidates[key][:4]:
-                exists = False
+                not_in_candidates = False
 
-        return exists
+        return not_in_candidates
 
 if __name__ == "__main__":
     v = MapVoter()
