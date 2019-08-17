@@ -93,18 +93,33 @@ class MapVoter:
         logging.info('Voting has been started and will end in %f seconds.', duration)
 
     def send_vote_active_reminder(self):
-        # build the candidates string for the vote announcement (again)
-        candidates_string = ""
-        for key in self.map_candidates:
-            candidates_string += f"{key}. {self.map_candidates[key]} \n"
 
         while self.voting_active:
+            vote_counts = self.get_current_vote_counts()
+
+            # build the current votes string
+            vote_counts_string = ""
+            for key in vote_counts:
+                vote_counts_string += f"{key}. {vote_counts[key].get('mapname')} ({vote_counts[key].get('mapvotes')} votes) \n"
+
             # calculate time remaining
             elapsed_time = time.time() - self.vote_timer_start_time
             time_remaining = round(self.config['MapVoter'].getfloat("vote_duration") - elapsed_time)
 
-            self.server.broadcast(f"Map voting is active with {time_remaining} seconds left! Type !vote followed by a number to vote.\n{candidates_string}\nExample: !vote 1")
+            self.server.broadcast(f"Map voting is active with {time_remaining} seconds left! Type !vote followed by a number to vote.\n{vote_counts_string}\nExample: !vote 1")
             time.sleep(self.config['MapVoter'].getfloat("announcement_interval"))
+
+    def get_current_vote_counts(self):
+        votes_data = {}
+        for map in self.map_candidates:
+            votes_data.update({map: {'mapname': self.map_candidates[map], 'mapvotes': 0}})
+            for vote in self.votes:
+                if self.votes[vote] == map:
+                    current_votes = votes_data.get(map).get('mapvotes')
+                    new_votes = current_votes + 1
+                    votes_data.get(map).update(mapvotes = new_votes)
+
+        return votes_data
 
     def end_vote(self):
         self.voting_active = False
