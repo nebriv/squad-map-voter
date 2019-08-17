@@ -106,7 +106,7 @@ class MapVoter:
             elapsed_time = time.time() - self.vote_timer_start_time
             time_remaining = round(self.config['MapVoter'].getfloat("vote_duration") - elapsed_time)
 
-            self.server.broadcast(f"Map voting is active with {time_remaining} seconds left! Type !vote followed by a number to vote.\n{vote_counts_string}\nExample: !vote 1")
+            self.server.broadcast(f"Voting ends in {time_remaining} seconds! Type !vote followed by a number to vote.\n{vote_counts_string}\n")
             time.sleep(self.config['MapVoter'].getfloat("announcement_interval"))
 
     def get_current_vote_counts(self):
