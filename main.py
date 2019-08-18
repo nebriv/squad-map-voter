@@ -190,7 +190,7 @@ class MapVoter:
 
     def start_read_server_logs(self):
         try:
-            server_log = open(self.config['MapVoter']['server_log_path'], 'r')
+            server_log = open(self.config['MapVoter']['server_log_path'], 'r', encoding="utf8")
             # start reading from the end of the file
             server_log.seek(0, 2)
             while True:
