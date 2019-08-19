@@ -59,10 +59,19 @@ class MapVoter:
         cl.start()
 
     def start_vote_delay(self):
+        # kill the vote delay if set
+        self.kill_vote_delay()
+
         time = self.config['MapVoter'].getfloat("vote_delay")
-        vote_delay_timer = threading.Timer(time, self.start_vote)
-        vote_delay_timer.start()
+        self.vote_delay_timer = threading.Timer(time, self.start_vote)
+        self.vote_delay_timer.start()
         logging.info('Voting will begin in %f seconds.', time)
+
+    def kill_vote_delay(self):
+        try:
+            self.vote_delay_timer.cancel()
+        except:
+            logging.error('Unable to kill vote delay timer or none exists.')
 
     def start_vote(self):
         # stop the vote if it already ran this round
@@ -328,7 +337,8 @@ class MapVoter:
 
 if __name__ == "__main__":
     v = MapVoter()
-    v.start_vote()
+    v.start_vote_delay()
+
     v.store_vote('user1', 1)
     v.store_vote('user2', 2)
     v.store_vote('user3', 3)
