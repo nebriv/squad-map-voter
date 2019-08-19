@@ -71,10 +71,7 @@ class MapVoter:
 
         self.map_candidates = self.get_map_candidates()
 
-        # build the candidates string for the vote announcement
-        candidates_string = ""
-        for key in self.map_candidates:
-            candidates_string += f"{key}. {self.map_candidates[key]} \n"
+        candidates_string = self.build_candidates_string()
 
         logging.info('Map candidates are %s', candidates_string)
 
@@ -93,10 +90,7 @@ class MapVoter:
         logging.info('Voting has been started and will end in %f seconds.', duration)
 
     def send_vote_active_reminder(self):
-         # build the candidates string for the vote announcement
-        candidates_string = ""
-        for key in self.map_candidates:
-            candidates_string += f"{key}. {self.map_candidates[key]} \n"
+        candidates_string = self.build_candidates_string()
 
         while self.voting_active:
 
@@ -118,6 +112,12 @@ class MapVoter:
                     votes_data.get(map).update(mapvotes = new_votes)
 
         return votes_data
+
+    def build_candidates_string(self):
+        candidates_string = ""
+        for key in self.map_candidates:
+            candidates_string += f"{key}. {self.map_candidates[key]} \n"
+        return candidates_string
 
     def end_vote(self):
         self.voting_active = False
@@ -257,11 +257,13 @@ class MapVoter:
         winning_map = self.map_candidates.get(winning_map_id)
 
         logging.info('Winning map is %s with %i / %i votes.', winning_map, winning_map_votes, len(self.votes))
+        print('Winning map is %s with %i / %i votes.', winning_map, winning_map_votes, len(self.votes))
 
         return [winning_map, winning_map_votes]
 
-    def get_map_list(self):
-        map_list = open(self.config['MapVoter']['map_rotation_path'], 'r')
+    def get_maps_from_bucket(self, size):
+        file = f'{size}_bucket_path'
+        map_list = open(self.config['MapVoter'][file], 'r')
         maps = []
         try:
             if map_list.mode == "r":
@@ -277,22 +279,24 @@ class MapVoter:
         return maps
 
     def get_map_candidates(self):
-        map_list = self.get_map_list()
+        candidates_tracker = {}
         candidates = {}
         i = 0
 
-        # add remaining random maps if the layer is not already added
-        while len(candidates) < self.config['MapVoter'].getint('num_map_candidates'):
+        # add unique candidates from each of the three buckets
+        for s in ['lg', 'md', 'sm']:
+            bucket = self.get_maps_from_bucket(s)
 
-            random_map = map_list[random.randint(0,len(map_list))].rstrip()
+            while s not in candidates_tracker:
+                random_map = bucket[random.randint(0,len(bucket)-1)].rstrip()
+                if self.layer_not_in_candidates(random_map, candidates_tracker):
+                    candidates_tracker.update({s:random_map})
+                    candidates.update({i+1: random_map})
+                    i += 1
 
-            if self.layer_not_in_candidates(random_map, candidates):
-                candidates.update({i+1:random_map})
-                i += 1
-
-        # add final candidate
+        # add play next map option
         candidates.update({len(candidates)+1:'Play the next map in rotation'})
-
+        print(candidates)
         return candidates
 
     def layer_not_in_candidates(self, map, candidates):
@@ -305,3 +309,10 @@ class MapVoter:
 
 if __name__ == "__main__":
     v = MapVoter()
+    v.start_vote()
+    v.store_vote('user1', 1)
+    v.store_vote('user2', 2)
+    v.store_vote('user3', 3)
+    v.store_vote('user4', 4)
+    v.store_vote('user5', 1)
+    v.store_vote('user6', 1)
