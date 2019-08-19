@@ -285,8 +285,7 @@ class MapVoter:
         winning_map = self.map_candidates.get(winning_map_id)
 
         logging.info('Winning map is %s with %i / %i votes.', winning_map, winning_map_votes, len(self.votes))
-        print('Winning map is %s with %i / %i votes.', winning_map, winning_map_votes, len(self.votes))
-
+    
         return [winning_map, winning_map_votes]
 
     def get_maps_from_bucket(self, size):
@@ -324,7 +323,6 @@ class MapVoter:
 
         # add play next map option
         candidates.update({len(candidates)+1:'Play the next map in rotation'})
-        print(candidates)
         return candidates
 
     def layer_not_in_candidates(self, map, candidates):
