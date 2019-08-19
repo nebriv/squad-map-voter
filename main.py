@@ -337,11 +337,3 @@ class MapVoter:
 
 if __name__ == "__main__":
     v = MapVoter()
-    v.start_vote_delay()
-
-    v.store_vote('user1', 1)
-    v.store_vote('user2', 2)
-    v.store_vote('user3', 3)
-    v.store_vote('user4', 4)
-    v.store_vote('user5', 1)
-    v.store_vote('user6', 1)
