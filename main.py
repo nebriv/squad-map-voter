@@ -150,6 +150,10 @@ class MapVoter:
     def detect_match_start(self, log_line):
         match = re.search(r"LogWorld: SeamlessTravel to:", log_line, re.IGNORECASE)
         if match:
+            # cancel any erroneous ongoing votes
+            if self.voting_active:
+                self.end_vote()
+            # start new vote delay
             self.start_vote_delay()
 
     def detect_user_vote(self, log_line):
