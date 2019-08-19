@@ -18,6 +18,7 @@ class MapVoter:
     map_candidates = {}
     votes = {}
     voting_active = False
+    vote_ran = False
 
     # logging setup
     now = datetime.datetime.now()
@@ -64,6 +65,11 @@ class MapVoter:
         logging.info('Voting will begin in %f seconds.', time)
 
     def start_vote(self):
+        # stop the vote if it already ran this round
+        if self.vote_ran:
+            logging.debug('Stopping vote. Voting cannot be ran more than once per round.')
+            return
+
         # do not start a vote if one is already active
         if self.voting_active:
             logging.error('Voting cannot be started while a vote is still ongoing.')
@@ -151,6 +157,7 @@ class MapVoter:
         # clear all previous votes and candidates
         self.votes = {}
         self.map_candidates = {}
+        self.vote_ran = True
 
     def detect_match_start(self, log_line):
         match = re.search(r"LogWorld: SeamlessTravel to:", log_line, re.IGNORECASE)
@@ -159,6 +166,8 @@ class MapVoter:
             # cancel any erroneous ongoing votes
             if self.voting_active:
                 self.kill_vote()
+            # reset vote ran flag
+            self.vote_ran = False
             # start new vote delay
             self.start_vote_delay()
 
