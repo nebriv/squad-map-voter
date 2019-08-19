@@ -119,6 +119,11 @@ class MapVoter:
             candidates_string += f"{key}. {self.map_candidates[key]} \n"
         return candidates_string
 
+    def kill_vote(self):
+        self.voting_active = False
+        self.votes = {}
+        self.map_candidates = {}
+
     def end_vote(self):
         self.voting_active = False
         logging.info('Voting has ended.')
@@ -150,9 +155,10 @@ class MapVoter:
     def detect_match_start(self, log_line):
         match = re.search(r"LogWorld: SeamlessTravel to:", log_line, re.IGNORECASE)
         if match:
+            logging.info('Round start has been detected. Cancelling any active voting.')
             # cancel any erroneous ongoing votes
             if self.voting_active:
-                self.end_vote()
+                self.kill_vote()
             # start new vote delay
             self.start_vote_delay()
 
