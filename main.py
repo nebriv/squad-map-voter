@@ -236,7 +236,7 @@ class MapVoter:
         latest_log = max(all_log_files, key=os.path.getmtime)
 
         try:
-            chat_log = open(latest_log, 'r')
+            chat_log = open(latest_log, 'r', encoding="utf8")
             # start reading from the end of the file
             chat_log.seek(0, 2)
             while True:
@@ -285,7 +285,7 @@ class MapVoter:
         winning_map = self.map_candidates.get(winning_map_id)
 
         logging.info('Winning map is %s with %i / %i votes.', winning_map, winning_map_votes, len(self.votes))
-    
+
         return [winning_map, winning_map_votes]
 
     def get_maps_from_bucket(self, size):
