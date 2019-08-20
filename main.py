@@ -218,7 +218,7 @@ class MapVoter:
 
     def start_read_server_logs(self):
         try:
-            server_log = open(self.config['MapVoter']['server_log_path'], 'r', encoding="utf8")
+            server_log = open(self.config['MapVoter']['server_log_path'], 'r', encoding="ascii", errors="surrogateescape")
             # start reading from the end of the file
             server_log.seek(0, 2)
             while True:
@@ -236,7 +236,7 @@ class MapVoter:
         latest_log = max(all_log_files, key=os.path.getmtime)
 
         try:
-            chat_log = open(latest_log, 'r', encoding="utf8")
+            chat_log = open(latest_log, 'r', encoding="ascii", errors="surrogateescape")
             # start reading from the end of the file
             chat_log.seek(0, 2)
             while True:
